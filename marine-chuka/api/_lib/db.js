@@ -1,5 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 const { Pool } = require('pg');
-let pool;
+
+let pool, schemaOk = null;
 function getPool() {
   if (!pool) {
     if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
@@ -12,11 +15,23 @@ function getPool() {
   }
   return pool;
 }
-const query = (t, p) => getPool().query(t, p);
+
+/* Creates the tables if they are missing. Remembers success; if it fails, the next request tries again. */
+function ensureSchema() {
+  if (!schemaOk) {
+    schemaOk = getPool().query(fs.readFileSync(path.join(__dirname, '..', '..', 'supabase.sql'), 'utf8'))
+      .then(() => console.log('Database ready.'))
+      .catch((e) => { schemaOk = null; console.error('!! Database setup failed:', e.message); throw e; });
+  }
+  return schemaOk;
+}
+
+const query = async (t, p) => { await ensureSchema(); return getPool().query(t, p); };
 async function tx(fn) {
+  await ensureSchema();
   const c = await getPool().connect();
   try { await c.query('begin'); const r = await fn(c); await c.query('commit'); return r; }
   catch (e) { try { await c.query('rollback'); } catch (_) {} throw e; }
   finally { c.release(); }
 }
-module.exports = { query, tx, getPool };
+module.exports = { query, tx, ensureSchema };
