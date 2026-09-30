@@ -4,7 +4,7 @@
 //   { "txn_code": "SJK7X2P9QR", "amount": 2000, "account": "1500184456952", "payer": "JOHN D" }
 const { tx } = require('./_lib/db');
 const { settle } = require('./_lib/orders');
-const { send, readBody, wrap, fail, same, normCode, validCode } = require('./_lib/util');
+const { send, readBody, wrap, fail, same, normCode, validCode, parseCredits } = require('./_lib/util');
 
 const pick = (o, keys) => { for (const k of keys) if (o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k]; };
 
@@ -16,7 +16,10 @@ module.exports = wrap(async (req, res) => {
   if (!same(key, given)) throw fail(401, 'Unauthorized');
 
   const body = await readBody(req);
-  const list = Array.isArray(body) ? body : (Array.isArray(body.payments) ? body.payments : [body]);
+  let list = Array.isArray(body) ? body : (Array.isArray(body.payments) ? body.payments : [body]);
+  // SMS-forwarder apps send the raw message text: { "message": "SJK7X2P9QR Confirmed. Ksh800.00 received ..." }
+  const raw = pick(body, ['message', 'text', 'sms', 'body', 'content']);
+  if (raw) list = list.concat(parseCredits(raw).map((x) => ({ txn_code: x.code, amount: x.amount, payer: x.payer })));
   let saved = 0, settled = 0;
   for (const p of list) {
     const code = normCode(pick(p, ['txn_code', 'transaction_code', 'TransID', 'transactionId', 'reference', 'transactionReference']));
@@ -26,10 +29,10 @@ module.exports = wrap(async (req, res) => {
     const payer = String(pick(p, ['payer', 'name', 'FirstName', 'customerName']) || '').slice(0, 80);
     await tx(async (c) => {
       const r = await c.query(
-        `insert into bank_credits (txn_code, amount, account_ref, payer, source) values ($1,$2,$3,$4,'ipn') on conflict (txn_code) do nothing`,
+        `insert into afr_credits (txn_code, amount, account_ref, payer, source) values ($1,$2,$3,$4,'ipn') on conflict (txn_code) do nothing`,
         [code, amount, account || null, payer || null]);
       saved += r.rowCount;
-      const { rows: [o] } = await c.query("select order_id from orders_v2 where txn_code = $1 and payment_status = 'AWAITING_VERIFICATION'", [code]);
+      const { rows: [o] } = await c.query("select order_id from afr_orders where txn_code = $1 and payment_status = 'AWAITING_VERIFICATION'", [code]);
       if (o && (await settle(c, o.order_id)).settled) settled++;
     });
   }
