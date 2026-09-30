@@ -1,4 +1,5 @@
-# Render Blueprint: New > Blueprint > pick this repo. Render reads this file and sets everything up.
+# Render Blueprint: New > Blueprint > pick this repo.
+# Render reads this file and sets everything up.
 services:
   - type: web
     name: afropiano
@@ -14,10 +15,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false       # you paste the Supabase connection string in the Render dashboard
+        sync: false       # paste: postgresql://postgres.bynepncmliaggkbykvvp:pt1x9l7gg5RaI5ea@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
       - key: TICKET_SECRET
-        generateValue: true
+        sync: false       # paste: 878b090a-002b-4aa6-b741-2fec2a0a0ae3
       - key: ADMIN_KEY
-        generateValue: true
+        sync: false       # paste: cb41b190-0769-45be-9d91-07c312fdc1be
       - key: IPN_SECRET
-        generateValue: true
+        sync: false       # paste: 18a5f9cc-449a-4b21-bb77-389f115c3576
