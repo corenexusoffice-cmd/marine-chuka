@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tickets | Afropiano Edition 1 Chuka | 03 October 2026</title>
+<meta name="description" content="Buy tickets for Afropiano Edition 1 at Marine Park Resort Chuka. Regular, VIP and VVIP. Pay by M-Pesa Paybill and get your ticket.">
+<meta name="theme-color" content="#0A0710">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/tickets.css?v=2">
+</head>
+<body>
+<a class="skip" href="#main">Skip to tickets</a>
+<a class="obar" id="obar" href="#offers" hidden></a>
+
+<header class="nav scrolled" id="nav">
+  <div class="wrap">
+    <a href="index.html" class="logo" aria-label="Marine Park, home"><b></b>MARINE PARK</a>
+    <nav class="links" aria-label="Main">
+      <a class="l" href="index.html">Home</a>
+      <a class="l" href="index.html#event">Event</a>
+      <a class="l" href="index.html#artists">Artists</a>
+      <a class="l" href="index.html#experience">Experience</a>
+      <a class="l" href="index.html#about">About</a>
+      <a class="l" href="index.html#location">Location</a>
+    </nav>
+    <a class="btn sm" href="#offers">Group offers <span class="arr">↓</span></a>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span><span></span></button>
+  </div>
+</header>
+<div class="drawer" id="drawer" aria-label="Menu">
+  <nav>
+    <a href="index.html">Home</a><a href="index.html#event">Event</a><a href="index.html#artists">Artists</a>
+    <a href="index.html#experience">Experience</a><a href="index.html#about">About</a><a href="index.html#location">Location</a>
+  </nav>
+  <a class="btn" href="#offers">Group offers <span class="arr">↓</span></a>
+</div>
+
+<main id="main">
+  <section class="tk-hero">
+    <div class="wrap">
+      <h1 class="h-hero">GET YOUR<br>TICKET.</h1>
+      <div class="row"><span><b>Afropiano Edition 1</b></span><span>Saturday 03 October 2026</span><span>Marine Park Resort, Chuka</span><span>18+</span></div>
+      <div class="mine" id="mine" hidden><button class="btn ghost sm" id="mineBtn" type="button">Find my last order</button></div>
+    </div>
+  </section>
+
+  <!-- 3-DAY OFFER FIRST: it is the first thing people see -->
+  <section class="tk-wrap">
+    <div class="wrap">
+      <div class="off" id="offers" style="scroll-margin-top:110px">
+        <div class="hot"><span class="flame">3 DAYS ONLY</span></div>
+        <div class="sec-head" style="margin-bottom:0">
+          <div>
+            <h2 class="h-sec">BRING YOUR PEOPLE.<br>PAY LESS.</h2>
+            <div class="count" id="count" role="timer" aria-label="Time left on the group offer">
+              <div><b id="cd">0</b><span>Days</span></div><div><b id="ch">00</b><span>Hours</span></div><div><b id="cm">00</b><span>Mins</span></div><div><b id="cs">00</b><span>Secs</span></div>
+            </div>
+            <p class="meta" id="offerEnds"></p>
+          </div>
+          <p class="lead">Couple and group bundles on Regular tickets. Standard tickets stay on sale at the normal price.</p>
+        </div>
+        <div class="offers" id="offers-grid"></div>
+        <div class="rules">
+          <p>Bundles are for Regular tickets only. One bundle covers everyone in the group, and the whole group enters together.</p>
+          <p id="stockRule"></p>
+        </div>
+      </div>
+
+      <div class="solo" id="solo">
+        <div class="sec-head" style="margin-bottom:0">
+          <h2 class="h-sec">OR GO<br>SOLO.</h2>
+          <p class="lead">Single tickets at the standard price. Pick the experience that suits your night.</p>
+        </div>
+        <div class="tks" id="tks"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Checkout -->
+<dialog class="sheet" id="sheet" aria-labelledby="ttl-details">
+  <div class="in">
+    <button class="x" id="closeBtn" type="button" aria-label="Close">×</button>
+
+    <!-- 1. details -->
+    <section class="view on" id="v-details">
+      <h2 id="ttl-details" tabindex="-1">YOUR DETAILS.</h2>
+      <div class="sel" id="selBox"><div class="k" id="selName"></div><div class="t" id="selTag"></div></div>
+      <div class="field">
+        <label id="qLabel" for="qtyOut">Tickets</label>
+        <div class="qty" role="group" aria-labelledby="qLabel">
+          <button type="button" id="qMinus" aria-label="Fewer">−</button>
+          <output id="qtyOut" aria-live="polite">1</output>
+          <button type="button" id="qPlus" aria-label="More">+</button>
+        </div>
+        <p class="hint" id="qHint"></p>
+      </div>
+      <div class="names" id="names"></div>
+      <div class="sum" id="sum" aria-live="polite"></div>
+      <p class="err" id="eOrder" role="alert" style="margin:-8px 0 14px"></p>
+      <button class="btn" id="payBtn" type="button">Book your ticket <span class="arr">→</span></button>
+    </section>
+
+    <!-- 2. payment screen -->
+    <section class="view" id="v-pay">
+      <h2 tabindex="-1">COMPLETE<br>YOUR PAYMENT.</h2>
+      <div class="ordsum"><div class="l"><span id="pItem"></span></div><div class="tot">Total: <b id="pTotal"></b></div></div>
+
+      <div class="paybox" aria-label="Payment details">
+        <div class="ph"><span class="lab">Pay with M-Pesa</span><span class="bank" id="pBank">Equity Bank</span></div>
+        <div class="cp" data-copy="paybill">
+          <span class="k">Paybill number</span>
+          <span class="v" id="pPaybill"></span>
+          <button class="cbtn" type="button" data-copy="paybill" aria-label="Copy paybill number"><i>Copy</i></button>
+        </div>
+        <div class="cp" data-copy="account">
+          <span class="k">Account number</span>
+          <span class="v" id="pAccount"></span>
+          <button class="cbtn" type="button" data-copy="account" aria-label="Copy account number"><i>Copy</i></button>
+        </div>
+        <div class="cp" data-copy="amount">
+          <span class="k">Amount</span>
+          <span class="v" id="pAmount"></span>
+          <button class="cbtn" type="button" data-copy="amount" aria-label="Copy amount"><i>Copy</i></button>
+        </div>
+        <p class="tapnote">Tap Copy, then paste it into M-Pesa. Enter the exact amount.</p>
+      </div>
+      <details class="how"><summary>How to pay with M-Pesa</summary>
+        <ol><li>Open M-Pesa, choose <b>Lipa na M-Pesa</b>, then <b>Pay Bill</b>.</li><li>Business number: <b id="hPay"></b></li><li>Account number: <b id="hAcc"></b></li><li>Enter the exact amount and your M-Pesa PIN.</li><li>You get an SMS with a transaction code (like <b>SJK7X2P9QR</b>). Come back and enter it below.</li></ol>
+      </details>
+
+      <div class="cp ref" data-copy="ref">
+        <span class="k">Order reference</span><span class="v" id="pRef"></span>
+        <button class="cbtn" type="button" data-copy="ref" aria-label="Copy order reference"><i>Copy</i></button>
+      </div>
+
+      <p class="after">After completing payment, enter the transaction code from your payment confirmation.</p>
+      <div class="field" style="margin-bottom:14px">
+        <label for="fCode">Transaction code</label>
+        <input id="fCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="e.g. SJK7X2P9QR" aria-describedby="eCode">
+        <p class="err" id="eCode" role="alert"></p>
+      </div>
+      <button class="btn" id="codeBtn" type="button">I'VE PAID, VERIFY PAYMENT</button>
+      <button class="btn ghost" id="payBack" type="button">Back</button>
+    </section>
+
+    <!-- 3. received for verification -->
+    <section class="view" id="v-review">
+      <h2 tabindex="-1">PAYMENT RECEIVED<br>FOR VERIFICATION.</h2>
+      <p class="big">We're confirming your payment.</p>
+      <div class="ordsum solid">
+        <div><span>Order</span><b id="rRef"></b></div>
+        <div><span>Amount</span><b id="rAmt"></b></div>
+        <div><span>Transaction code</span><b id="rCode"></b></div>
+      </div>
+      <div class="pulse" aria-hidden="true"><i></i><i></i><i></i></div>
+      <p role="status" id="rMsg" class="wait">Checking with the bank...</p>
+      <p class="keep">Keep this page open or save your order reference. Your ticket appears here the moment the payment is confirmed. If you close it, tap <b>Find my last order</b> on the tickets page.</p>
+      <button class="btn ghost" id="rCopy" type="button">Copy order reference</button>
+      <a class="btn ghost" id="rHelp" href="#" target="_blank" rel="noopener" hidden>Need help? Message us</a>
+    </section>
+
+    <!-- closed -->
+    <section class="view" id="v-closed">
+      <div class="tick cross" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+      <h2 tabindex="-1">PAYMENT<br>NOT CONFIRMED.</h2>
+      <p class="big" id="closedMsg">We could not match this payment. If you paid, contact us with your order reference and the M-Pesa message and we will sort it out.</p>
+      <button class="btn" id="newOrder" type="button">Start a new order <span class="arr">→</span></button>
+    </section>
+
+    <!-- 4. ticket -->
+    <section class="view" id="v-ticket">
+      <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2 tabindex="-1">YOU'RE IN.</h2>
+      <p class="big" style="margin-bottom:6px">Payment confirmed. Here is your ticket.</p>
+      <div class="dt" id="dt">
+        <div class="holo"></div>
+        <div class="a">
+          <div class="brand">AFROPIANO<small>EDITION 1</small></div>
+          <div class="row"><div class="d">03 OCT 2026<br>Marine Park Resort</div><div class="cat" id="dtCat"></div></div>
+          <div class="who" id="dtName"></div>
+        </div>
+        <div class="b">
+          <div class="id"><small>TICKET ID</small><span id="dtId"></span><div class="ad" id="dtAdmits"></div></div>
+          <div class="qr" id="dtQr" aria-label="Ticket QR code" role="img"></div>
+        </div>
+      </div>
+      <p class="hint">Save it to your gallery, or screenshot this screen. Bring a valid ID (18+).</p>
+      <button class="btn" id="saveBtn" type="button" style="margin-top:18px">Save ticket to gallery</button>
+      <button class="btn ghost" id="dlBtn" type="button">Download image</button>
+      <button class="btn ghost" id="linkBtn" type="button">Copy my ticket link</button>
+      <button class="btn ghost" id="doneBtn" type="button">Done</button>
+    </section>
+  </div>
+</dialog>
+
+<script src="assets/js/config.js?v=2"></script>
+<script src="assets/js/common.js"></script>
+<script src="assets/js/qrcode.js"></script>
+<script src="assets/js/ticketview.js?v=2"></script>
+<script src="assets/js/tickets.js?v=2"></script>
+</body>
+</html>

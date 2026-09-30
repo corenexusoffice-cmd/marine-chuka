@@ -1,0 +1,23 @@
+# Render Blueprint: New > Blueprint > pick this repo. Render reads this file and sets everything up.
+services:
+  - type: web
+    name: afropiano
+    runtime: node
+    region: frankfurt
+    plan: free            # change to "starter" ($7/mo) before the event so the site never sleeps
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false       # you paste the Supabase connection string in the Render dashboard
+      - key: TICKET_SECRET
+        generateValue: true
+      - key: ADMIN_KEY
+        generateValue: true
+      - key: IPN_SECRET
+        generateValue: true

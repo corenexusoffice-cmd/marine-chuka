@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your ticket | Afropiano Edition 1 Chuka</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0A0710">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/tickets.css?v=2">
+</head>
+<body>
+<header class="nav scrolled" id="nav"><div class="wrap"><a href="index.html" class="logo" aria-label="Marine Park, home"><b></b>MARINE PARK</a><a class="btn sm" href="tickets.html">Tickets</a></div></header>
+<main class="tpage"><div class="in">
+  <h1 id="ttl">YOUR TICKET.</h1>
+  <p class="msg" id="msg">Loading your ticket...</p>
+  <div id="wrap" hidden>
+    <div class="dt" id="dt">
+      <div class="holo"></div>
+      <div class="a">
+        <div class="brand">AFROPIANO<small>EDITION 1</small></div>
+        <div class="row"><div class="d">03 OCT 2026<br>Marine Park Resort</div><div class="cat" id="dtCat"></div></div>
+        <div class="who" id="dtName"></div>
+      </div>
+      <div class="b">
+        <div class="id"><small>TICKET ID</small><span id="dtId"></span><div class="ad" id="dtAdmits"></div></div>
+        <div class="qr" id="dtQr" aria-label="Ticket QR code" role="img"></div>
+      </div>
+    </div>
+    <p class="hint">Save it to your gallery, or screenshot this screen. Bring a valid ID (18+).</p>
+    <button class="btn" id="saveBtn" type="button" style="margin-top:18px">Save ticket to gallery</button>
+    <button class="btn ghost" id="dlBtn" type="button">Download image</button>
+  </div>
+</div></main>
+<script src="assets/js/qrcode.js"></script>
+<script src="assets/js/ticketview.js?v=2"></script>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search), id=q.get('id'), k=q.get('k'), $=function(i){return document.getElementById(i)}, T=null;
+  if(!id||!k){ $('msg').textContent='This ticket link is incomplete. Open the full link you saved, or find your order on the tickets page.'; return; }
+  fetch('/api/ticket?id='+encodeURIComponent(id)+'&token='+encodeURIComponent(k),{cache:'no-store'}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Ticket not found.');return j})})
+   .then(function(t){ T=t; AFT.render(t); $('msg').hidden=true; $('wrap').hidden=false; })
+   .catch(function(e){ $('ttl').textContent='TICKET NOT FOUND.'; $('msg').textContent=e.message+' If you paid and cannot see your ticket, contact us with your order reference.'; });
+  $('saveBtn').onclick=function(){ var b=this,l=b.textContent; b.disabled=true; b.textContent='Preparing...'; AFT.saveToPhone(T).then(function(){b.disabled=false;b.textContent=l},function(){b.disabled=false;b.textContent=l}); };
+  $('dlBtn').onclick=function(){ var b=this,l=b.textContent; b.disabled=true; b.textContent='Preparing...'; AFT.download(T).then(function(){b.disabled=false;b.textContent=l},function(){b.disabled=false;b.textContent=l}); };
+  $('dt').addEventListener('touchstart',function(){this.classList.add('touch')},{passive:true});
+})();
+</script>
+</body>
+</html>
