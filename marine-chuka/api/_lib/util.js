@@ -29,9 +29,27 @@ async function readBody(req) {
 }
 const wrap = (fn) => async (req, res) => {
   try { await fn(req, res); }
-  catch (e) { if (!e.status) console.error(e); if (e.code === '23505') e = fail(409, 'This transaction code has already been used on another order.'); send(res, e.status || 500, { error: e.status ? e.message : 'Something went wrong on our side. Please try again.' }); }
+  catch (e) { if (!e.status) console.error(e); if (e.code === '23505') e = fail(409, 'This transaction code has already been used on another order.'); send(res, e.status || 500, { error: e.status ? e.message : 'Our server could not save this just now. Your payment page is still valid. Try again in a moment.', retry: !e.status }); }
 };
 const fail = (status, message) => Object.assign(new Error(message), { status });
 const ip = (req) => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
 
-module.exports = { orderRef, accessToken, sign, qrPayload, same, normPhone, normCode, validCode, send, readBody, wrap, fail, ip, rand };
+/* Read pasted lines: "SJK7X2P9QR, 2000" or a full M-Pesa / bank SMS containing a code and "Ksh 2,000.00". */
+function parseCredits(text) {
+  const out = [];
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const t = line.trim(); if (!t) continue;
+    let code, amount;
+    const csv = t.split(/[,;\t]/).map((x) => x.trim());
+    if (csv.length >= 2 && validCode(normCode(csv[0])) && Number(csv[1].replace(/,/g, '')) > 0) { code = normCode(csv[0]); amount = Number(csv[1].replace(/,/g, '')); }
+    else {
+      const m = t.match(/\b([A-Z0-9]{10})\b/) || t.match(/\b([A-Z0-9]{8,20})\b/);
+      const a = t.match(/(?:ksh|kes)\.?\s*([\d,]+(?:\.\d+)?)/i);
+      if (m && a && /[0-9]/.test(m[1]) && /[A-Z]/.test(m[1])) { code = m[1]; amount = Number(a[1].replace(/,/g, '')); }
+    }
+    if (code && amount > 0) out.push({ code, amount, payer: t.length > 60 ? null : t });
+  }
+  return out;
+}
+
+module.exports = { parseCredits, orderRef, accessToken, sign, qrPayload, same, normPhone, normCode, validCode, send, readBody, wrap, fail, ip, rand };
