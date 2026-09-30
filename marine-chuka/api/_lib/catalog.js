@@ -8,7 +8,7 @@ module.exports = {
   STOCK_PER_OFFER: 10,
   MAX_BUNDLES_PER_ORDER: 2,
   MAX_TICKETS_PER_ORDER: 10,
-  HOLD_MINUTES: 30,          // unpaid orders hold bundle stock this long
+  HOLD_MINUTES: 60,          // orders still waiting for money hold bundle stock this long
   PAY: { bank: 'Equity Bank', paybill: '247247', account: '1500184456952' },
   TIERS: {
     regular: { name: 'Regular', price: 500 },
