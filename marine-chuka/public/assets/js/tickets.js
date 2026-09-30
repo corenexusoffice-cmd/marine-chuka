@@ -9,34 +9,13 @@
   var offerLive=function(){return now()<offerEnd()};
   var stock=function(id){return C.stock?C.stock[id]:undefined};
 
-  /* Client-side order ID generator: matches the server's format AFR-XXXXXX */
-  var ALPHA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  function clientOrderRef(){
-    var s='';
-    var bytes=new Uint8Array(6);
-    (window.crypto||window.msCrypto).getRandomValues(bytes);
-    for(var i=0;i<6;i++) s+=ALPHA[bytes[i]%ALPHA.length];
-    return 'AFR-'+s;
-  }
-  function clientToken(){
-    var bytes=new Uint8Array(18);
-    (window.crypto||window.msCrypto).getRandomValues(bytes);
-    var bin='';
-    for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
-    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  }
-
   function api(path,opts){
-    return fetch(path,opts).then(function(r){
-      return r.json().catch(function(){return {}}).then(function(j){
-        if(!r.ok) throw new Error(j.error||'Something went wrong. Please try again.');
-        return j;
-      });
-    },function(){ throw new Error('No connection. Check your internet and try again.'); });
+    return fetch(path,opts).then(function(r){return r.json().catch(function(){return {}}).then(function(j){ if(!r.ok) throw new Error(j.error||'Something went wrong. Please try again.'); return j; })},
+      function(){ throw new Error('No connection. Check your internet and try again.'); });
   }
   function post(path,body){ return api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }
 
-  /* ---------- render cards ---------- */
+  /* ---------- render ---------- */
   var tks=$('tks'), grid=$('offers-grid');
   function renderCards(){
     tks.innerHTML=''; grid.innerHTML='';
@@ -95,7 +74,7 @@
     sheet.scrollTop=0; S.view=v; if(v!=='review') stopPoll();
   }
   function openSheet(item){
-    S.item=item; S.qty=1; S.names=[]; S.order=null; lastFocus=document.activeElement;
+    S.item=item; S.qty=1; S.names=[]; lastFocus=document.activeElement;
     var isB=item.kind==='bundle';
     $('selBox').style.setProperty('--c',isB?'var(--purple-soft)':'var(--'+item.id+')');
     $('selName').textContent=isB?item.name+' offer (Regular)':item.name;
@@ -162,50 +141,18 @@
     return out;
   }
 
-  /* ---------- step 1: create order (INSTANT payment page) ---------- */
+  /* ---------- step 1: "Book your ticket" -> payment page opens AT ONCE ---------- */
   function busy(btn,on,label){ btn.disabled=on; if(on){btn.dataset.l=btn.innerHTML;btn.textContent=label;} else if(btn.dataset.l){btn.innerHTML=btn.dataset.l;} }
-  function saveOrder(){ try{ localStorage.setItem('af_order',JSON.stringify({id:S.order.order_id,k:S.order.token,t:Date.now()})); }catch(e){} }
+  var AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function rnd(n){ var a=new Uint8Array(n), s=''; (window.crypto||window.msCrypto).getRandomValues(a); for(var i=0;i<n;i++) s+=AL[a[i]%AL.length]; return s; }
+  function saveDraft(){ try{ localStorage.setItem('af_order',JSON.stringify({o:S.order,t:Date.now()})); }catch(e){} }
 
   $('payBtn').addEventListener('click',function(){
-    var names=collect(); if(!names) return; var btn=this; $('eOrder').textContent='';
-
-    /* INSTANT: generate order ID + token client-side, show payment page right away */
-    var orderId=clientOrderRef();
-    var token=clientToken();
-    var total=S.item.price*S.qty;
-    var label=S.item.kind==='bundle'?S.item.name:S.item.name;
-    S.order={
-      order_id:orderId, token:token, total:total, label:label,
-      kind:S.item.kind, item:S.item.id, quantity:S.qty,
-      admits:people(), names:names
-    };
-    saveOrder();
-    showPay();   /* ← payment page appears instantly, no waiting */
-
-    /* Fire-and-forget: tell the server to store the order.
-       If it fails, we still show payment page but retry silently. */
-    var attempt=0;
-    function tryCreate(){
-      attempt++;
-      post('/api/order',{
-        order_id:orderId, token:token,
-        names:names, item:S.item.id, quantity:S.qty
-      }).then(function(o){
-        /* server may have assigned a different ID if ours collided; sync it */
-        if(o.order_id && o.order_id!==orderId){
-          S.order.order_id=o.order_id; saveOrder();
-          $('pRef').textContent=o.order_id;
-        }
-        refreshStock();
-      }).catch(function(e){
-        if(attempt<3){
-          setTimeout(tryCreate,1500*attempt);
-        } else {
-          console.warn('Order create failed after retries:',e.message);
-        }
-      });
-    }
-    tryCreate();
+    var names=collect(); if(!names) return; $('eOrder').textContent='';
+    var it=S.item;
+    S.order={ order_id:'AFR-'+rnd(6), token:rnd(24), item:it.id, kind:it.kind, label:it.name, quantity:S.qty, total:it.price*S.qty, names:names };
+    saveDraft();
+    showPay();
   });
 
   /* ---------- step 2: payment screen ---------- */
@@ -230,26 +177,24 @@
   });
   $('payBack').addEventListener('click',function(){ show('details'); });
 
-  /* ---------- step 3: submit code ---------- */
+  /* ---------- step 3: "I've paid" ---------- */
   $('fCode').addEventListener('input',function(){ var v=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); if(v!==this.value) this.value=v; });
   $('codeBtn').addEventListener('click',submitCode);
   $('fCode').addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();submitCode();} });
   function submitCode(){
-    var code=$('fCode').value.trim().toUpperCase(), er=$('eCode'), btn=$('codeBtn');
+    var code=$('fCode').value.trim().toUpperCase(), er=$('eCode'), btn=$('codeBtn'), o=S.order;
     er.textContent=''; $('fCode').removeAttribute('aria-invalid');
-    if(!/^[A-Z0-9]{8,20}$/.test(code)){ er.textContent='Enter the code from your payment message. It has 8 to 20 letters and numbers.'; $('fCode').setAttribute('aria-invalid','true'); $('fCode').focus(); return; }
+    if(!/^[A-Z0-9]{8,20}$/.test(code)){ er.textContent='Paste the M-Pesa code from your payment message. It has 8 to 20 letters and numbers.'; $('fCode').setAttribute('aria-invalid','true'); $('fCode').focus(); return; }
     busy(btn,true,'Checking...');
-    post('/api/submit-code',{order_id:S.order.order_id,token:S.order.token,txn_code:code})
-      .then(function(r){ route(r); })
-      .catch(function(e){ er.textContent=e.message; $('fCode').setAttribute('aria-invalid','true'); })
-      .then(function(){ busy(btn,false); });
+    post('/api/verify',{ref:o.order_id,token:o.token,item:o.item,quantity:o.quantity,names:o.names,txn_code:code}).then(function(r){ route(r); })
+      .catch(function(e){ er.textContent=e.message; $('fCode').setAttribute('aria-invalid','true'); }).then(function(){ busy(btn,false); });
   }
 
-  /* ---------- verification screen + polling ---------- */
+  /* ---------- awaiting verification ---------- */
   function showReview(r){
     $('rRef').textContent=r.order_id; $('rAmt').textContent=fmt(r.total); $('rCode').textContent=r.txn_code||'';
     var help=$('rHelp'); if(C.CONTACT_WHATSAPP){ help.href='https://wa.me/'+C.CONTACT_WHATSAPP+'?text='+encodeURIComponent('Hi, my order '+r.order_id+' is awaiting verification.'); help.hidden=false; }
-    $('rMsg').textContent='Checking with the bank...';
+    $('rMsg').textContent='Awaiting verification. Checking if your payment has arrived...';
     show('review'); startPoll();
   }
   function startPoll(){
@@ -257,21 +202,21 @@
     (function loop(){
       S.poll=setTimeout(function(){
         if(!sheet.open||S.view!=='review') return;
-        n++;
-        api('/api/order-status?id='+encodeURIComponent(S.order.order_id)+'&token='+encodeURIComponent(S.order.token),{cache:'no-store'}).then(function(r){
+        n++; api('/api/status?ref='+encodeURIComponent(S.order.order_id)+'&token='+encodeURIComponent(S.order.token),{cache:'no-store'}).then(function(r){
           if(r.status!=='AWAITING_VERIFICATION'){ route(r); return; }
           var mins=(Date.now()-started)/60000;
-          $('rMsg').textContent= mins>4?'Still confirming. Bank confirmations can take a few minutes. You can safely leave this page open.':'Checking with the bank...';
+          $('rMsg').textContent= mins>3?'Still awaiting verification. Payments can take a few minutes to show. Keep this page open, it updates by itself.':'Awaiting verification. Checking if your payment has arrived...';
           loop();
         }).catch(function(){ loop(); });
-      }, n<12?4000:12000);
+      }, n<10?3000:10000);
     })();
   }
   function stopPoll(){ clearTimeout(S.poll); S.poll=null; }
   $('rCopy').addEventListener('click',function(){ var b=this; AFT.copy(S.order.order_id).then(function(){ b.textContent='Copied'; setTimeout(function(){b.textContent='Copy order reference'},1600); }); });
+  $('rWrong').addEventListener('click',function(){ showPay(); });
 
   function route(r){
-    S.order={order_id:r.order_id,token:S.order.token,total:r.total,label:r.label,kind:r.kind,quantity:r.quantity};
+    var o=S.order; o.total=r.total; o.label=r.label; o.kind=r.kind; o.quantity=r.quantity; saveDraft();
     if(r.status==='PAID') return loadTicket();
     if(r.status==='AWAITING_VERIFICATION') return showReview(r);
     if(r.status==='REJECTED'){ $('closedMsg').textContent='We could not match this payment to your order '+r.order_id+'. If you paid, contact us with this reference and your M-Pesa message and we will sort it out.'; show('closed'); return; }
@@ -295,16 +240,17 @@
   $('dt').addEventListener('touchstart',function(){this.classList.add('touch')},{passive:true});
 
   /* ---------- come back to an order ---------- */
-  function savedOrder(){ try{ var o=JSON.parse(localStorage.getItem('af_order')||'null'); if(o&&o.id&&o.k&&Date.now()-o.t<30*864e5) return o; }catch(e){} return null; }
+  function savedOrder(){ try{ var d=JSON.parse(localStorage.getItem('af_order')||'null'); if(d&&d.o&&d.o.order_id&&d.o.token&&Date.now()-d.t<30*864e5) return d.o; }catch(e){} return null; }
   var sv=savedOrder();
   if(sv){
     $('mine').hidden=false;
     $('mineBtn').addEventListener('click',function(){
-      var b=this; lastFocus=b; b.disabled=true;
-      api('/api/order-status?id='+encodeURIComponent(sv.id)+'&token='+encodeURIComponent(sv.k),{cache:'no-store'}).then(function(r){
-        S.order={order_id:r.order_id,token:sv.k,total:r.total,label:r.label,kind:r.kind,quantity:r.quantity};
-        if(!sheet.open) sheet.showModal(); route(r);
-      }).catch(function(e){ alert(e.message); }).then(function(){ b.disabled=false; });
+      var b=this; lastFocus=b; b.disabled=true; S.order=sv;
+      if(!sheet.open) sheet.showModal();
+      api('/api/status?ref='+encodeURIComponent(sv.order_id)+'&token='+encodeURIComponent(sv.token),{cache:'no-store'})
+        .then(function(r){ route(r); })
+        .catch(function(){ showPay(); })
+        .then(function(){ b.disabled=false; });
     });
   }
 
