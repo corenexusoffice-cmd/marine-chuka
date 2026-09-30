@@ -138,29 +138,30 @@
         <button class="cbtn" type="button" data-copy="ref" aria-label="Copy order reference"><i>Copy</i></button>
       </div>
 
-      <p class="after">After completing payment, enter the transaction code from your payment confirmation.</p>
+      <p class="after">After paying, paste the M-Pesa code from your SMS (like SJK7X2P9QR) and tap <b>I've paid</b>. We check automatically.</p>
       <div class="field" style="margin-bottom:14px">
-        <label for="fCode">Transaction code</label>
+        <label for="fCode">M-Pesa code</label>
         <input id="fCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="e.g. SJK7X2P9QR" aria-describedby="eCode">
         <p class="err" id="eCode" role="alert"></p>
       </div>
-      <button class="btn" id="codeBtn" type="button">I'VE PAID, VERIFY PAYMENT</button>
+      <button class="btn" id="codeBtn" type="button">I'VE PAID</button>
       <button class="btn ghost" id="payBack" type="button">Back</button>
     </section>
 
     <!-- 3. received for verification -->
     <section class="view" id="v-review">
-      <h2 tabindex="-1">PAYMENT RECEIVED<br>FOR VERIFICATION.</h2>
-      <p class="big">We're confirming your payment.</p>
+      <h2 tabindex="-1">AWAITING<br>VERIFICATION.</h2>
+      <p class="big">We are checking that your money arrived.</p>
       <div class="ordsum solid">
         <div><span>Order</span><b id="rRef"></b></div>
         <div><span>Amount</span><b id="rAmt"></b></div>
         <div><span>Transaction code</span><b id="rCode"></b></div>
       </div>
       <div class="pulse" aria-hidden="true"><i></i><i></i><i></i></div>
-      <p role="status" id="rMsg" class="wait">Checking with the bank...</p>
+      <p role="status" id="rMsg" class="wait">Checking if your payment has arrived...</p>
       <p class="keep">Keep this page open or save your order reference. Your ticket appears here the moment the payment is confirmed. If you close it, tap <b>Find my last order</b> on the tickets page.</p>
       <button class="btn ghost" id="rCopy" type="button">Copy order reference</button>
+      <button class="btn ghost" id="rWrong" type="button">Wrong code? Enter it again</button>
       <a class="btn ghost" id="rHelp" href="#" target="_blank" rel="noopener" hidden>Need help? Message us</a>
     </section>
 
@@ -201,7 +202,7 @@
 <script src="assets/js/config.js?v=2"></script>
 <script src="assets/js/common.js"></script>
 <script src="assets/js/qrcode.js"></script>
-<script src="assets/js/ticketview.js?v=2"></script>
-<script src="assets/js/tickets.js?v=2"></script>
+<script src="assets/js/ticketview.js?v=3"></script>
+<script src="assets/js/tickets.js?v=3"></script>
 </body>
 </html>
